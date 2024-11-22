@@ -11,6 +11,7 @@ datasource db {
 model User {
   id  Int    @id @default(autoincrement())
   name    String?
+  // username is email
   username String @unique
   password String
   blogs    Blog[]
