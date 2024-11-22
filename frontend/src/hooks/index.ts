@@ -11,6 +11,39 @@ export interface Blog {
         "name": string
     }
 }
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+
+export const useUser = () => {
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        axios
+            .get(`${BACKEND_URL}/profile`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            })
+            .then((response) => {
+                setUser(response.data.user);
+                setLoading(false);
+            })
+            .catch(() => {
+                setLoading(false);
+            });
+    }, []);
+
+    return {
+        loading,
+        user,
+    };
+};
+
 
 export const useBlog = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(true);

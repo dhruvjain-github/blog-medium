@@ -85,3 +85,40 @@ userRouter.post('/signup', async (c) => {
       return c.text('Invalid')
     }
   })
+
+
+  import { verify } from 'hono/jwt';
+
+  userRouter.get('/profile', async (c) => {
+      const authHeader = c.req.headers.get('Authorization');
+      if (!authHeader) {
+          c.status(401);
+          return c.json({ message: "Unauthorized" });
+      }
+  
+      try {
+          const token = authHeader.split(" ")[1]; // Extract the token
+          const payload = await verify(token, c.env.JWT_SECRET); // Verify the token
+  
+          const prisma = new PrismaClient({
+              datasourceUrl: c.env.DATABASE_URL,
+          }).$extends(withAccelerate());
+  
+          const user = await prisma.user.findUnique({
+              where: { id: payload.id }, // Fetch the user by their ID from the JWT payload
+              select: { id: true, name: true, username: true }, // Only select relevant fields
+          });
+  
+          if (!user) {
+              c.status(404);
+              return c.json({ message: "User not found" });
+          }
+  
+          return c.json({ user });
+      } catch (e) {
+          console.log(e);
+          c.status(403);
+          return c.json({ message: "Invalid or expired token" });
+      }
+  });
+  
