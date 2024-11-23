@@ -71,8 +71,8 @@ Navigate to the frontend folder and start the development server:
     npm start
 
 ## ✨ Features
-User Authentication (Signup & Login)
-JWT-based session management
-Blog post creation, editing, and deletion
-View and interact with blog posts
-Type-safe validation using Zod
+1. User Authentication (Signup & Login)
+2. JWT-based session management
+3. Blog post creation, editing, and deletion
+4. View and interact with blog posts
+5. Type-safe validation using Zod
