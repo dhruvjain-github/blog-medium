@@ -148,3 +148,28 @@ blogRouter.get('/:id', async (c) => {
         });
     }
 })
+
+blogRouter.get('/profile', async (c) => {
+    const userId = c.get('userId');
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: Number(userId) },
+            select: { id: true, name: true, email: true },
+        });
+
+        if (!user) {
+            c.status(404);
+            return c.json({ message: 'User not found' });
+        }
+
+        return c.json(user);
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        c.status(500);
+        return c.json({ message: 'Internal server error' });
+    }
+});

@@ -1,90 +1,113 @@
-import { useEffect, useState } from "react"
-import axios from "axios";
+import { useEffect, useState } from "react";
+import axios, { AxiosError } from "axios";
 import { BACKEND_URL } from "../config";
 
-
 export interface Blog {
-    "content": string;
-    "title": string;
-    "id": number
-    "author": {
-        "name": string
-    }
-}
-export interface User {
-    id: number;
+  id: string;
+  title: string;
+  content: string;
+  author: {
     name: string;
-    email: string;
+  };
+  publishedDate?: string; // Optional if not always present
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+}
 
+// Utility function to get the authorization token
+const getAuthToken = (): string => localStorage.getItem("token") || "";
+
+/**
+ * Hook to fetch user details
+ */
 export const useUser = () => {
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<User | null>(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios
-            .get(`${BACKEND_URL}/profile`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-            })
-            .then((response) => {
-                setUser(response.data.user);
+        // Simulate an API call to fetch user data
+        const fetchUser = async () => {
+            try {
+                const response = await fetch("/api/user"); // Replace with your actual endpoint
+                if (!response.ok) throw new Error("Failed to fetch user");
+                const userData = await response.json();
+                setUser(userData);
+            } catch (err) {
+                setError(err.message);
+            } finally {
                 setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
-            });
+            }
+        };
+
+        fetchUser();
     }, []);
 
-    return {
-        loading,
-        user,
-    };
+    return { user, loading, error };
 };
 
-
+/**
+ * Hook to fetch a single blog by ID
+ */
 export const useBlog = ({ id }: { id: string }) => {
-    const [loading, setLoading] = useState(true);
-    const [blog, setBlog] = useState<Blog>();
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        axios.get(`${BACKEND_URL}/api/v1/blog/${id}`, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        })
-            .then(response => {
-                setBlog(response.data.blog);
-                setLoading(false);
-            })
-    }, [id])
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const response = await axios.get<{ blog: Blog }>(
+          `${BACKEND_URL}/api/v1/blog/${id}`,
+          { headers: { Authorization: getAuthToken() } }
+        );
+        setBlog(response.data.blog);
+      } catch (err) {
+        const error = err as AxiosError;
+        console.error("Error fetching blog:", error);
+        setError(error.response?.data?.message || "Failed to fetch blog.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return {
-        loading,
-        blog
-    }
+    fetchBlog();
+  }, [id]);
 
-}
+  return { blog, loading, error };
+};
+
+/**
+ * Hook to fetch all blogs
+ */
 export const useBlogs = () => {
-    const [loading, setLoading] = useState(true);
-    const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        axios.get(`${BACKEND_URL}/api/v1/blog/bulk`, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        })
-            .then(response => {
-                setBlogs(response.data.blogs);
-                setLoading(false);
-            })
-    }, [])
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get<{ blogs: Blog[] }>(
+          `${BACKEND_URL}/api/v1/blog/bulk`,
+          { headers: { Authorization: getAuthToken() } }
+        );
+        setBlogs(response.data.blogs);
+      } catch (err) {
+        const error = err as AxiosError;
+        console.error("Error fetching blogs:", error);
+        setError(error.response?.data?.message || "Failed to fetch blogs.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return {
-        loading,
-        blogs
-    }
-}
+    fetchBlogs();
+  }, []);
+
+  return { blogs, loading, error };
+};

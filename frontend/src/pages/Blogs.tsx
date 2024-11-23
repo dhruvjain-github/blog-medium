@@ -4,13 +4,15 @@ import { BlogSkeleton } from "../components/BlogSkeleton";
 import { useBlogs, useUser } from "../hooks";
 
 export const Blogs = () => {
-    const { loading: blogsLoading, blogs } = useBlogs();
+    const { loading: blogsLoading, blogs, error } = useBlogs();
     const { loading: userLoading, user } = useUser();
+
+    console.log("User data:", user); // Debug log to check user details
 
     if (blogsLoading || userLoading) {
         return (
             <div>
-                <Appbar userName={user?.name || "Guest"} />
+                <Appbar userName={user?.name || "Guest"} avatar={user?.avatar} />
                 <div className="flex justify-center">
                     <div>
                         <BlogSkeleton />
@@ -24,20 +26,36 @@ export const Blogs = () => {
         );
     }
 
+    if (error) {
+        return (
+            <div>
+                <Appbar userName={user?.name || "Guest"} avatar={user?.avatar} />
+                <div className="flex justify-center text-red-500">
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
-            <Appbar userName={user?.name || "Guest"} />
+            <Appbar userName={user?.name || "Guest"} avatar={user?.avatar} />
             <div className="flex justify-center">
                 <div>
-                    {blogs.map((blog) => (
-                        <BlogCard
-                            id={blog.id}
-                            authorName={blog.author.name || "Anonymous"}
-                            title={blog.title}
-                            content={blog.content}
-                            publishedDate={"2nd Feb 2024"}
-                        />
-                    ))}
+                    {blogs.length === 0 ? (
+                        <p>No blogs available</p>
+                    ) : (
+                        blogs.map((blog) => (
+                            <BlogCard
+                                key={blog.id}
+                                id={blog.id.toString()} // Ensure id is passed as a string
+                                authorName={blog.author?.name || "Anonymous"}
+                                title={blog.title}
+                                content={blog.content}
+                                publishedDate={blog.publishedDate || "Unknown"}
+                            />
+                        ))
+                    )}
                 </div>
             </div>
         </div>
